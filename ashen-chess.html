@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>잿빛 체스</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a24a;--text:#e2d8c6;--mut:#9a8f7e;--line:#3a3127;--panel:#181614}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#1f1b16,#0a0908 70%);color:var(--text);font-family:'Noto Sans KR',sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-family:'Noto Serif KR',serif;font-weight:900;color:var(--gold);letter-spacing:6px;margin:4px 0 0;font-size:34px;text-shadow:0 0 20px #8a5a10}
+h1 small{display:block;font-family:Cinzel,serif;font-size:12px;letter-spacing:8px;color:#8d7a52;text-align:center}
+.wrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-top:14px;align-items:flex-start}
+#board{display:grid;grid-template-columns:repeat(7,1fr);width:min(92vw,532px);aspect-ratio:1;border:3px solid #4a3d2b;box-shadow:0 0 40px #000;border-radius:4px;overflow:hidden}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none}
+.sq.l{background:#3b362f}.sq.d{background:#27231e}
+.sq.last{box-shadow:inset 0 0 0 100px rgba(201,162,74,.16)}
+.sq.sel{box-shadow:inset 0 0 0 3px #fff}
+.sq.mv::after{content:'';width:24%;height:24%;border-radius:50%;background:rgba(127,200,255,.45)}
+.sq.cap::after{content:'';position:absolute;inset:6%;border-radius:50%;border:3px solid rgba(255,90,70,.75)}
+.pc{width:78%;height:78%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-weight:900;font-size:clamp(16px,4.5vw,28px);color:#fff;box-shadow:0 3px 6px rgba(0,0,0,.6);transition:transform .15s;position:relative}
+.pc.i{background:radial-gradient(circle at 35% 30%,#7fa6ee,#3f6fc4 55%,#1d3768);border:2px solid #d9b45a}
+.pc.b{background:radial-gradient(circle at 35% 30%,#e07a6a,#a83a30 55%,#4f1712);border:2px solid #9fd04a}
+.pc.K::before{content:'♛';position:absolute;top:-14px;font-size:14px;color:#ffd76a}
+.pc.R{border-radius:18%}
+.pc small{font-family:'Noto Sans KR';font-size:9px;font-weight:400;opacity:.8;margin-top:-3px}
+.sq:hover .pc{transform:scale(1.06)}
+.side{width:min(92vw,300px);display:flex;flex-direction:column;gap:10px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+.ttl{font-family:'Noto Serif KR',serif;color:var(--gold);font-weight:700;margin-bottom:6px}
+#status{font-size:16px;font-weight:700}
+#log{max-height:220px;overflow:auto;font-size:12px;line-height:1.6}
+.cap{display:flex;flex-wrap:wrap;gap:3px;min-height:22px}
+.mini{width:22px;height:22px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR';font-weight:900;color:#fff}
+.mini.i{background:#3f6fc4}.mini.b{background:#a83a30}
+button{font-family:inherit;background:#2a251f;color:var(--text);border:1px solid #4d4234;border-radius:3px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--gold)}
+button.on{background:#6b501a;color:#fff;border-color:var(--gold)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.legend{font-size:12px;color:#c9bda6;line-height:1.7}
+.legend b{color:var(--gold)}
+</style>
+</head>
+<body>
+<h1>잿빛 체스<small>ASHEN GAMBIT</small></h1>
+<div class="wrap">
+  <div id="board"></div>
+  <div class="side">
+    <div class="box"><div id="status"></div><div class="row" style="margin-top:8px"><button id="undo">↶ 무르기</button><button id="restart">새 게임</button></div></div>
+    <div class="box"><div class="ttl">설정</div>
+      <div class="legend">내 진영</div><div class="row" id="segSide"><button data-v="0" class="on">철의 서약단</button><button data-v="1">잿빛 군락</button></div>
+      <div class="legend" style="margin-top:6px">상대</div><div class="row" id="segMode"><button data-v="ai" class="on">AI</button><button data-v="hot">2인</button></div>
+      <div class="legend" style="margin-top:6px">AI 난이도</div><div class="row" id="segLv"><button data-v="2">쉬움</button><button data-v="3" class="on">보통</button><button data-v="4">어려움</button></div>
+    </div>
+    <div class="box"><div class="ttl">잡은 말</div><div class="cap" id="cap0"></div><div class="cap" id="cap1" style="margin-top:4px"></div></div>
+    <div class="box legend"><div class="ttl">규칙</div>
+      <b>군주</b> 모든 방향 1칸 · <b>전차/괴수</b> 직선 무제한 · <b>사제/감시자</b> 대각선 무제한 · <b>강하대/도약체</b> L자 도약 · <b>전사/무리</b> 앞 1칸, 대각선 앞으로 잡기, 끝줄 도달 시 전차로 승격.<br>
+      체크 규칙 없음 — <b>적 군주를 잡으면 승리</b>. 움직일 수 없으면 패배. 40수 동안 잡기가 없으면 무승부.</div>
+    <div class="box"><div class="ttl">기록</div><div id="log"></div></div>
+  </div>
+</div>
+<script>
+'use strict';
+const N=7;
+const NAMES=[{K:['집정관','집'],R:['성벽 전차','전'],B:['서약 사제','사'],N:['선봉 강하대','선'],P:['서약 전사','병']},
+             {K:['군락 군주','군'],R:['파쇄 괴수','파'],B:['시냅스 감시자','감'],N:['갈퀴 도약체','도'],P:['갈퀴 무리','갈']}];
+const VAL={K:1000,R:5,B:3,N:3,P:1};
+let S,hist,sel=null,cfg={side:0,mode:'ai',lv:3},busy=false;
+const $=s=>document.querySelector(s);
+function init(){
+  const back='RNBKBNR';const b=Array.from({length:N},()=>Array(N).fill(null));
+  for(let x=0;x<N;x++){b[0][x]={t:back[x],o:1};b[1][x]={t:'P',o:1};b[5][x]={t:'P',o:0};b[6][x]={t:back[x],o:0};}
+  S={b,turn:0,winner:null,last:null,quiet:0,cap:[[],[]],log:[]};hist=[];sel=null;render();maybeAI();
+}
+const dir=o=>o===0?-1:1;
+function moves(st,o){const out=[],b=st.b;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const p=b[y][x];if(!p||p.o!==o)continue;
+    const add=(tx,ty)=>{if(tx<0||ty<0||tx>=N||ty>=N)return false;const q=b[ty][tx];if(q&&q.o===o)return false;out.push([x,y,tx,ty]);return !q;};
+    const ray=ds=>ds.forEach(([dx,dy])=>{let tx=x+dx,ty=y+dy;while(add(tx,ty)){tx+=dx;ty+=dy;}});
+    if(p.t==='K')for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)if(dx||dy)add(x+dx,y+dy);
+    if(p.t==='R')ray([[1,0],[-1,0],[0,1],[0,-1]]);
+    if(p.t==='B')ray([[1,1],[1,-1],[-1,1],[-1,-1]]);
+    if(p.t==='N')[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]].forEach(([dx,dy])=>add(x+dx,y+dy));
+    if(p.t==='P'){const d=dir(o),ny=y+d;if(ny>=0&&ny<N){if(!b[ny][x])out.push([x,y,x,ny]);for(const dx of[-1,1]){const q=b[ny][x+dx];if(q&&q.o!==o)out.push([x,y,x+dx,ny]);}}}
+  }return out;}
+function apply(st,m){const [x,y,tx,ty]=m;const b=st.b.map(r=>r.slice());const p=b[y][x],q=b[ty][tx];
+  let np=p;if(p.t==='P'&&(ty===0||ty===N-1))np={t:'R',o:p.o};
+  b[ty][tx]=np;b[y][x]=null;
+  const ns={b,turn:1-st.turn,winner:null,last:m,quiet:q?0:st.quiet+1,cap:st.cap,log:st.log};
+  if(q&&q.t==='K')ns.winner=p.o;
+  return{ns,q,promo:np!==p};}
+function evalB(st,o){let s=0;for(let y=0;y<N;y++)for(let x=0;x<N;x++){const p=st.b[y][x];if(!p)continue;
+  let v=VAL[p.t]*10;if(p.t!=='K')v+=3-Math.abs(x-3)*.5-Math.abs(y-3)*.3;if(p.t==='P')v+=(p.o===0?6-y:y)*1.5;s+=p.o===o?v:-v;}return s;}
+function negamax(st,d,a,bt){const o=st.turn;if(st.winner!=null)return st.winner===o?99999:-99999;if(d===0)return evalB(st,o);
+  const ms=moves(st,o);if(!ms.length)return -99999;
+  ms.sort((m1,m2)=>(st.b[m2[3]][m2[2]]?VAL[st.b[m2[3]][m2[2]].t]:0)-(st.b[m1[3]][m1[2]]?VAL[st.b[m1[3]][m1[2]].t]:0));
+  let best=-Infinity;for(const m of ms){const v=-negamax(apply(st,m).ns,d-1,-bt,-a);if(v>best)best=v;if(v>a)a=v;if(a>=bt)break;}return best;}
+function aiMove(){const ms=moves(S,S.turn);let best=[],bv=-Infinity;
+  for(const m of ms){const v=-negamax(apply(S,m).ns,cfg.lv-1,-Infinity,Infinity)+Math.random()*2;if(v>bv){bv=v;best=m;}}return best;}
+function doMove(m){
+  hist.push(S);const {ns,q,promo}=apply(S,m);const p=S.b[m[1]][m[0]];
+  ns.cap=[S.cap[0].slice(),S.cap[1].slice()];ns.log=S.log.slice();
+  const nm=NAMES[p.o][p.t][0];const sq=(x,y)=>'ABCDEFG'[x]+(N-y);
+  let line=`${p.o===0?'⚜':'☣'} ${nm} ${sq(m[0],m[1])}→${sq(m[2],m[3])}`;
+  if(q){ns.cap[p.o].push(q);line+=` ✖ ${NAMES[q.o][q.t][0]} 처치`;}
+  if(promo)line+=' ▲ 성벽 전차/파쇄 괴수로 승격';
+  ns.log.push({o:p.o,line});
+  S=ns;
+  if(S.winner==null&&!moves(S,S.turn).length)S.winner=1-S.turn;
+  if(S.winner==null&&S.quiet>=80)S.winner=-1;
+  sel=null;render();maybeAI();
+}
+function isAITurn(){return cfg.mode==='ai'&&S.turn!==cfg.side&&S.winner==null;}
+function maybeAI(){if(!isAITurn())return;busy=true;render();setTimeout(()=>{const m=aiMove();busy=false;if(m)doMove(m);},350);}
+function render(){
+  const bd=$('#board');bd.innerHTML='';const flip=cfg.mode==='ai'&&cfg.side===1;
+  const legal=sel?moves(S,S.turn).filter(m=>m[0]===sel[0]&&m[1]===sel[1]):[];
+  for(let ry=0;ry<N;ry++)for(let rx=0;rx<N;rx++){const x=flip?N-1-rx:rx,y=flip?N-1-ry:ry;
+    const d=document.createElement('div');d.className='sq '+((x+y)%2?'d':'l');
+    if(S.last&&((S.last[0]===x&&S.last[1]===y)||(S.last[2]===x&&S.last[3]===y)))d.classList.add('last');
+    if(sel&&sel[0]===x&&sel[1]===y)d.classList.add('sel');
+    const lm=legal.find(m=>m[2]===x&&m[3]===y);if(lm)d.classList.add(S.b[y][x]?'cap':'mv');
+    const p=S.b[y][x];if(p){const e=document.createElement('div');e.className=`pc ${p.o===0?'i':'b'} ${p.t}`;e.innerHTML=`${NAMES[p.o][p.t][1]}`;e.title=NAMES[p.o][p.t][0];d.appendChild(e);}
+    d.onclick=()=>click(x,y,lm);bd.appendChild(d);}
+  const who=['<span style="color:#7fa6ee">철의 서약단</span>','<span style="color:#e07a6a">잿빛 군락</span>'];
+  $('#status').innerHTML=S.winner===-1?'무승부':S.winner!=null?`★ ${who[S.winner]} 승리!`:busy?`${who[S.turn]} 생각 중…`:`${who[S.turn]}의 차례`;
+  [0,1].forEach(o=>{$('#cap'+o).innerHTML=S.cap[o].map(q=>`<div class="mini ${q.o===0?'i':'b'}" title="${NAMES[q.o][q.t][0]}">${NAMES[q.o][q.t][1]}</div>`).join('');});
+  const L=$('#log');L.innerHTML=S.log.map(l=>`<div style="color:${l.o===0?'#a9c4f5':'#f0a89b'}">${l.line}</div>`).join('');L.scrollTop=L.scrollHeight;
+}
+function click(x,y,lm){if(busy||S.winner!=null||isAITurn())return;
+  if(lm){doMove(lm);return;}const p=S.b[y][x];sel=p&&p.o===S.turn?[x,y]:null;render();}
+function seg(id,key,num){document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{document.querySelectorAll(`#${id} button`).forEach(z=>z.classList.remove('on'));b.classList.add('on');cfg[key]=num?+b.dataset.v:b.dataset.v;if(key!=='lv')init();});}
+seg('segSide','side',1);seg('segMode','mode',0);seg('segLv','lv',1);
+$('#restart').onclick=init;
+$('#undo').onclick=()=>{if(busy||!hist.length)return;S=hist.pop();if(cfg.mode==='ai'&&S.turn!==cfg.side&&hist.length)S=hist.pop();sel=null;render();};
+init();
+</script>
+</body>
+</html>

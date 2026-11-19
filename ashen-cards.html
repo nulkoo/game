@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>성전 카드전</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a24a;--text:#e2d8c6;--mut:#9a8f7e;--line:#3a3127;--panel:#181614}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at center,#221d17,#0a0908 75%);color:var(--text);font-family:'Noto Sans KR',sans-serif;display:flex;flex-direction:column;align-items:center;padding:10px;user-select:none}
+h1{font-family:'Noto Serif KR',serif;font-weight:900;color:var(--gold);letter-spacing:5px;margin:0;font-size:26px;text-shadow:0 0 20px #8a5a10}
+.table{width:min(98vw,860px);display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.cmd{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;transition:.2s}
+.cmd.tgt{box-shadow:0 0 0 2px #ff6a50;cursor:pointer}
+.port{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR';font-weight:900;font-size:24px;color:#fff;flex:0 0 auto}
+.port.i{background:radial-gradient(circle at 35% 30%,#7fa6ee,#3f6fc4 55%,#1d3768);border:2px solid #d9b45a}
+.port.b{background:radial-gradient(circle at 35% 30%,#e07a6a,#a83a30 55%,#4f1712);border:2px solid #9fd04a}
+.cname{font-family:'Noto Serif KR';font-weight:900}
+.hp{font-size:22px;font-weight:700;color:#ff8a72;margin-left:auto}
+.en{display:flex;gap:3px}
+.gem{width:12px;height:12px;border-radius:2px;transform:rotate(45deg);background:#2a251f;border:1px solid #5a4a33}
+.gem.on{background:#e8c24a;border-color:#ffe38a;box-shadow:0 0 6px #e8c24a}
+.meta{font-size:12px;color:var(--mut)}
+.lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px;background:linear-gradient(#1a1714,#141210);border:1px solid var(--line);border-radius:6px}
+.slot{height:clamp(118px,21vh,170px);max-width:150px;width:100%;justify-self:center;border:2px dashed #3a3127;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;transition:.15s}
+.slot.can{border-color:#7fb7ff;background:rgba(127,183,255,.08);cursor:pointer}
+.slot.tgt .card{box-shadow:0 0 0 3px #ff6a50,0 4px 10px #000;cursor:pointer}
+.slot.ftgt .card{box-shadow:0 0 0 3px #7fe08a,0 4px 10px #000;cursor:pointer}
+.mid{grid-column:1/-1;height:2px;background:linear-gradient(90deg,transparent,#5a4a33,transparent);margin:2px 0}
+.card{width:100%;height:100%;border-radius:8px;padding:6px;display:flex;flex-direction:column;position:relative;box-shadow:0 4px 10px #000;transition:transform .15s,box-shadow .15s;overflow:hidden}
+.card.i{background:linear-gradient(160deg,#2c4880,#16243f);border:2px solid #d9b45a}
+.card.b{background:linear-gradient(160deg,#7a2a22,#3a1410);border:2px solid #9fd04a}
+.card.sp{background:linear-gradient(160deg,#4a3a1a,#221a0c);border:2px solid #e8c24a}
+.card .cost{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:#e8c24a;color:#1a1408;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:13px}
+.card .nm{font-family:'Noto Serif KR';font-weight:900;font-size:12.5px;text-align:center;margin:2px 0 0 18px;line-height:1.2}
+.card .art{flex:1;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.9}
+.card .tx{font-size:10.5px;color:#e7dcc6;text-align:center;line-height:1.3;min-height:14px}
+.card .st{display:flex;justify-content:space-between;font-weight:900;font-size:16px;margin-top:2px}
+.card .atk{color:#ffcf6a}.card .def{color:#ff8a72}
+.card.hit{animation:hit .35s}
+.card.atkU{animation:up .3s}.card.atkD{animation:down .3s}
+@keyframes hit{0%,100%{transform:none}30%{transform:translateX(-5px)}60%{transform:translateX(5px);filter:brightness(2) saturate(0)}}
+@keyframes up{50%{transform:translateY(-22px) scale(1.05)}}
+@keyframes down{50%{transform:translateY(22px) scale(1.05)}}
+.hand{display:flex;justify-content:center;gap:8px;min-height:150px;padding:6px;flex-wrap:wrap}
+.hand .card{width:110px;height:146px;cursor:pointer}
+.hand .card:hover{transform:translateY(-8px)}
+.hand .card.sel{transform:translateY(-14px);box-shadow:0 0 0 3px #fff,0 6px 16px #000}
+.hand .card.no{filter:grayscale(.8) brightness(.6);cursor:default}
+.bar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+button{font-family:inherit;background:#2a251f;color:var(--text);border:1px solid #4d4234;border-radius:3px;padding:8px 14px;cursor:pointer;font-size:14px}
+button:hover{border-color:var(--gold)}
+button.primary{background:linear-gradient(#8a6a26,#6b501a);border-color:#c9a24a;color:#fff6df;font-weight:700}
+button:disabled{opacity:.4;cursor:default}
+#msg{font-size:13px;color:#d6c9b0;min-height:20px}
+#log{font-size:12px;color:var(--mut);max-height:90px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 10px;line-height:1.5}
+.float{position:fixed;pointer-events:none;font-family:'Noto Serif KR';font-weight:900;font-size:22px;color:#ff6a50;text-shadow:0 0 4px #000,0 0 8px #000;animation:fl 1s forwards;z-index:9}
+@keyframes fl{to{transform:translateY(-40px);opacity:0}}
+.overlay{position:fixed;inset:0;background:rgba(5,4,3,.88);display:flex;align-items:center;justify-content:center;z-index:20}
+.mbox{background:var(--panel);border:1px solid #6b5530;border-radius:6px;padding:22px;text-align:center;max-width:520px}
+.mbox h2{font-family:'Noto Serif KR';color:var(--gold);margin:0 0 10px}
+.facs{display:flex;gap:10px;margin:14px 0;justify-content:center;flex-wrap:wrap}
+.hidden{display:none!important}
+.dice{display:inline-flex;width:30px;height:30px;background:#e8e0d0;color:#111;border-radius:5px;font-weight:900;align-items:center;justify-content:center;font-size:18px;margin:0 4px}
+.kw{color:#ffd98a;font-weight:700}
+</style>
+</head>
+<body>
+<h1>성전 카드전</h1>
+<div class="table">
+  <div class="cmd" id="cmd1"></div>
+  <div class="lanes" id="lanes"></div>
+  <div class="cmd" id="cmd0"></div>
+  <div class="bar"><div id="msg"></div><div><button id="rulesB">규칙</button> <button class="primary" id="endB">턴 종료 ▶</button></div></div>
+  <div class="hand" id="hand"></div>
+  <div id="log"></div>
+</div>
+<div class="overlay" id="start"><div class="mbox"><h2>성전 카드전</h2>
+  <div style="color:#c9bda6;line-height:1.6;font-size:14px">유닛을 4개의 전선에 배치하세요. 턴이 끝나면 내 유닛이 맞은편을 공격하고, 맞은편이 비어 있으면 적 사령관을 직접 공격합니다.<br>적 사령관의 체력 20을 먼저 0으로 만들면 승리.</div>
+  <div class="facs"><button class="primary" data-f="0">⚜ 철의 서약단으로</button><button class="primary" data-f="1" style="background:linear-gradient(#8a2a22,#5a1a14)">☣ 잿빛 군락으로</button></div>
+  <div class="meta">상대는 AI가 맡습니다.</div></div></div>
+<div class="overlay hidden" id="modal"><div class="mbox"><h2 id="mT"></h2><div id="mB" style="line-height:1.7;font-size:14px;text-align:left"></div><div style="margin-top:14px"><button class="primary" id="mOk">확인</button></div></div></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);const sleep=ms=>new Promise(r=>setTimeout(r,ms));const d6=()=>1+Math.floor(Math.random()*6);
+const FN=['철의 서약단','잿빛 군락'];
+const CARDS=[
+ // 철의 서약단
+ {id:'i1',f:0,n:'서약 전사',c:1,a:2,h:2,art:'🛡'},
+ {id:'i2',f:0,n:'방패 전사',c:2,a:1,h:5,k:['방어'],art:'🛡'},
+ {id:'i3',f:0,n:'볼트 사수',c:2,a:3,h:2,art:'🔫'},
+ {id:'i4',f:0,n:'선봉 강하대',c:3,a:3,h:3,k:['비행'],art:'🪽'},
+ {id:'i5',f:0,n:'망치낙하 분대',c:4,a:5,h:3,art:'💥'},
+ {id:'i6',f:0,n:'집정관 발루스',c:5,a:4,h:6,k:['방어'],on:'rally',tx:'등장: 아군 전체 공격 +1',art:'♛'},
+ {id:'i7',f:0,n:'성벽 전차',c:6,a:6,h:8,k:['방어'],art:'🚜'},
+ {id:'i8',f:0,n:'궤도 포격',c:3,sp:'dmgDice',tx:'적 유닛 하나에 D6+1 피해',art:'☄'},
+ {id:'i9',f:0,n:'전투 서약',c:1,sp:'buff',tx:'아군 유닛 공격 +2',art:'⚜'},
+ {id:'i10',f:0,n:'야전 치료',c:2,sp:'heal',tx:'사령관 체력 +5',art:'✚'},
+ // 잿빛 군락
+ {id:'b1',f:1,n:'갈퀴 무리',c:1,a:2,h:1,art:'🦂'},
+ {id:'b2',f:1,n:'산성 사수',c:2,a:1,h:3,k:['독'],art:'🧪'},
+ {id:'b3',f:1,n:'갈퀴 도약체',c:2,a:2,h:2,k:['비행'],art:'🦇'},
+ {id:'b4',f:1,n:'시냅스 감시자',c:3,a:2,h:5,k:['재생'],art:'👁'},
+ {id:'b5',f:1,n:'가시 돌격체',c:4,a:4,h:4,k:['재생'],art:'🦖'},
+ {id:'b6',f:1,n:'파쇄 괴수',c:5,a:6,h:6,k:['재생'],art:'🦀'},
+ {id:'b7',f:1,n:'군락 군주',c:6,a:5,h:7,k:['비행'],on:'quake',tx:'등장: 적 유닛 전체 1 피해',art:'♛'},
+ {id:'b8',f:1,n:'포자 포격',c:3,sp:'dmgDice',tx:'적 유닛 하나에 D6+1 피해',art:'☄'},
+ {id:'b9',f:1,n:'포식 본능',c:1,sp:'buff',tx:'아군 유닛 공격 +2',art:'🩸'},
+ {id:'b10',f:1,n:'끝없는 번식',c:2,sp:'swarm',tx:'빈 전선 최대 2곳에 갈퀴 무리 소환',art:'🥚'},
+];
+const KWT={'방어':'받는 피해 -1','비행':'맞은편 유닛을 무시하고 사령관 공격','독':'피해를 준 유닛 즉시 처치','재생':'내 턴 종료 시 체력 1 회복(최대치까지)'};
+let G,me=0,selCard=null,busy=false;
+function mkDeck(f){const d=[];CARDS.filter(c=>c.f===f).forEach(c=>{d.push(c,c);});for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}return d;}
+function unit(c){return{c,a:c.a,h:c.h,mh:c.h,uid:Math.random()};}
+function start(f){me=f;G={p:[0,1].map(i=>({f:i,hp:20,en:0,max:0,deck:mkDeck(i),hand:[],field:[null,null,null,null],fat:0})),turn:0,over:false,n:0};
+  for(let i=0;i<4;i++){draw(0);draw(1);}
+  $('#log').innerHTML='';G.turn=Math.random()<.5?0:1;draw(1-G.turn);log(`${FN[G.turn]} 선공 (후공은 카드 1장 추가)`);beginTurn();}
+function P(i){return G.p[i];}
+function draw(i){const p=P(i);if(!p.deck.length){p.fat++;p.hp-=p.fat;log(`${FN[i]}: 덱 소진 — 피로 피해 ${p.fat}`);return;}const c=p.deck.pop();if(p.hand.length<7)p.hand.push(c);}
+function log(t){const L=$('#log');const d=document.createElement('div');d.innerHTML=t;L.appendChild(d);L.scrollTop=L.scrollHeight;}
+function beginTurn(){const p=P(G.turn);p.max=Math.min(8,p.max+1);p.en=p.max;if(G.n>0||true)draw(G.turn);G.n++;selCard=null;render();checkEnd();
+  if(!G.over&&G.turn!==me){busy=true;render();setTimeout(aiTurn,700);}}
+function oppOf(i){return 1-i;}
+function floatAt(el,t,col){if(!el)return;const r=el.getBoundingClientRect();const f=document.createElement('div');f.className='float';f.textContent=t;if(col)f.style.color=col;f.style.left=(r.left+r.width/2-12)+'px';f.style.top=(r.top+r.height/3)+'px';document.body.appendChild(f);setTimeout(()=>f.remove(),1000);}
+function slotEl(owner,i){return document.querySelector(`.slot[data-o="${owner}"][data-i="${i}"]`);}
+function hurtUnit(owner,i,dmg,src){const u=P(owner).field[i];if(!u)return;let d=dmg;if(u.c.k&&u.c.k.includes('방어'))d=Math.max(0,d-1);u.h-=d;
+  const el=slotEl(owner,i);floatAt(el,`-${d}`);const ce=el&&el.querySelector('.card');if(ce){ce.classList.remove('hit');void ce.offsetWidth;ce.classList.add('hit');}
+  if(d>0&&src&&src.c.k&&src.c.k.includes('독')&&u.h>0){u.h=0;log('독: 즉시 처치');}
+  if(u.h<=0){P(owner).field[i]=null;log(`☠ ${u.c.n} 파괴`);}}
+function hurtCmd(owner,d){P(owner).hp-=d;floatAt($('#cmd'+(owner===me?0:1)),`-${d}`);}
+async function playCard(pi,hi,target){
+  const p=P(pi),c=p.hand[hi];if(!c||c.c>p.en)return false;
+  if(!c.sp){if(p.field[target])return false;p.field[target]=unit(c);
+    if(c.on==='rally')p.field.forEach(u=>{if(u)u.a+=1;});
+    if(c.on==='quake')P(oppOf(pi)).field.forEach((u,i)=>{if(u)hurtUnit(oppOf(pi),i,1);});
+  }else if(c.sp==='dmgDice'){const o=oppOf(pi);if(!P(o).field[target])return false;const r=d6();await showDice(r,`${c.n}: D6+1 = ${r+1} 피해`);hurtUnit(o,target,r+1);}
+  else if(c.sp==='buff'){if(!p.field[target])return false;p.field[target].a+=2;floatAt(slotEl(pi,target),'+2','#ffd36a');}
+  else if(c.sp==='heal'){p.hp+=5;floatAt($('#cmd'+(pi===me?0:1)),'+5','#7fe08a');}
+  else if(c.sp==='swarm'){let k=0;p.field.forEach((u,i)=>{if(!u&&k<2){p.field[i]=unit(CARDS.find(x=>x.id==='b1'));k++;}});}
+  p.en-=c.c;p.hand.splice(hi,1);log(`<span style="color:${pi===0?'#a9c4f5':'#f0a89b'}">${FN[pi]}</span>: ${c.n}${c.sp?'':' 배치'}`);render();checkEnd();return true;}
+async function showDice(r,txt){const m=$('#msg');m.innerHTML=`🎲 <span class="dice">${r}</span> ${txt}`;await sleep(700);}
+async function endTurn(){
+  const pi=G.turn,o=oppOf(pi),p=P(pi);busy=true;selCard=null;render();
+  for(let i=0;i<4;i++){const u=p.field[i];if(!u||G.over)continue;
+    const ce=slotEl(pi,i)&&slotEl(pi,i).querySelector('.card');if(ce)ce.classList.add(pi===me?'atkU':'atkD');await sleep(260);
+    const fly=u.c.k&&u.c.k.includes('비행');const opp=P(o).field[i];
+    if(opp&&!fly)hurtUnit(o,i,u.a,u);else{hurtCmd(o,u.a);log(`${u.c.n} → 사령관 ${u.a} 피해`);}
+    render();checkEnd();await sleep(200);}
+  p.field.forEach(u=>{if(u&&u.c.k&&u.c.k.includes('재생')&&u.h<u.mh)u.h++;});
+  if(G.over)return;busy=false;G.turn=o;beginTurn();}
+function checkEnd(){if(G.over)return;const a=P(0).hp<=0,b=P(1).hp<=0;if(!a&&!b)return;G.over=true;busy=true;render();
+  const win=a&&b?-1:a?1:0;modal(win===-1?'무승부':win===me?'승리!':'패배…',win===-1?'양 사령관이 동시에 쓰러졌습니다.':`${FN[win]}이(가) 전장을 지배했습니다.`,()=>location.reload());}
+function modal(t,b,cb){$('#mT').textContent=t;$('#mB').innerHTML=b;$('#modal').classList.remove('hidden');$('#mOk').onclick=()=>{$('#modal').classList.add('hidden');cb&&cb();};}
+/* ---------- AI ---------- */
+async function aiTurn(){
+  const pi=G.turn,o=oppOf(pi),p=P(pi);
+  for(let guard=0;guard<10&&!G.over;guard++){
+    let best=null;
+    p.hand.forEach((c,hi)=>{if(c.c>p.en)return;
+      const opts=[];
+      if(!c.sp){p.field.forEach((u,i)=>{if(u)return;const e=P(o).field[i];let s=c.a+c.h+c.c*1.5;
+        if(e)s+=e.a*1.2+(c.a>=e.h?4:0)-(e.a>=c.h?3:0);else s+=2;if(c.on==='quake')s+=P(o).field.filter(Boolean).length*2;if(c.on==='rally')s+=p.field.filter(Boolean).length*2;opts.push({hi,t:i,s});});}
+      else if(c.sp==='dmgDice')P(o).field.forEach((u,i)=>{if(u)opts.push({hi,t:i,s:(u.h<=4?u.c.c*3+4:u.c.c)+u.a});});
+      else if(c.sp==='buff')p.field.forEach((u,i)=>{if(u)opts.push({hi,t:i,s:(P(o).field[i]?2:5)+(u.c.k&&u.c.k.includes('비행')?3:0)});});
+      else if(c.sp==='heal')opts.push({hi,t:0,s:p.hp<=12?10:1});
+      else if(c.sp==='swarm'){const e=p.field.filter(u=>!u).length;if(e)opts.push({hi,t:0,s:Math.min(2,e)*4});}
+      opts.forEach(x=>{if(!best||x.s>best.s)best=x;});});
+    if(!best||best.s<2)break;
+    await playCard(pi,best.hi,best.t);await sleep(550);}
+  if(!G.over)await endTurn();}
+/* ---------- 렌더 ---------- */
+function cardHTML(c,u){const cls=c.sp?'sp':c.f===0?'i':'b';const kw=(c.k||[]).map(k=>`<span class="kw" title="${KWT[k]}">${k}</span>`).join(' ');
+  return `<div class="card ${cls}" title="${(c.k||[]).map(k=>k+': '+KWT[k]).join('\n')}"><div class="cost">${c.c}</div><div class="nm">${c.n}</div><div class="art">${c.art}</div>
+  <div class="tx">${kw}${kw&&c.tx?'<br>':''}${c.tx||''}</div>${c.sp?'':`<div class="st"><span class="atk">⚔${u?u.a:c.a}</span><span class="def">♥${u?u.h:c.h}</span></div>`}</div>`;}
+function cmdHTML(i){const p=P(i);return `<div class="port ${i===0?'i':'b'}">${i===0?'⚜':'☣'}</div><div><div class="cname" style="color:${i===0?'#7fa6ee':'#e07a6a'}">${FN[i]} ${i===me?'(나)':'(AI)'} ${G.turn===i?'◀ 차례':''}</div>
+  <div class="en">${Array.from({length:8},(_,k)=>`<div class="gem ${k<p.en?'on':''}" style="${k>=p.max?'opacity:.25':''}"></div>`).join('')}<span class="meta" style="margin-left:6px">에너지 ${p.en}/${p.max}</span></div>
+  <div class="meta">덱 ${p.deck.length} · 손패 ${p.hand.length}</div></div><div class="hp">♥ ${p.hp}</div>`;}
+function render(){
+  const ai=oppOf(me);$('#cmd1').innerHTML=cmdHTML(ai);$('#cmd0').innerHTML=cmdHTML(me);
+  const sc=selCard!=null?P(me).hand[selCard]:null;
+  const L=$('#lanes');L.innerHTML='';
+  [ai,me].forEach((o,row)=>{if(row===1){const m=document.createElement('div');m.className='mid';L.appendChild(m);}
+    for(let i=0;i<4;i++){const u=P(o).field[i];const s=document.createElement('div');s.className='slot';s.dataset.o=o;s.dataset.i=i;
+      if(u)s.innerHTML=cardHTML(u.c,u);
+      if(sc&&!busy){
+        if(!sc.sp&&o===me&&!u){s.classList.add('can');s.onclick=()=>act(i);}
+        if(sc.sp==='dmgDice'&&o===ai&&u){s.classList.add('tgt');s.onclick=()=>act(i);}
+        if(sc.sp==='buff'&&o===me&&u){s.classList.add('ftgt');s.onclick=()=>act(i);}}
+      L.appendChild(s);}});
+  const H=$('#hand');H.innerHTML='';
+  P(me).hand.forEach((c,hi)=>{const w=document.createElement('div');w.innerHTML=cardHTML(c);const e=w.firstChild;
+    const can=!busy&&G.turn===me&&c.c<=P(me).en&&!G.over;if(!can)e.classList.add('no');if(selCard===hi)e.classList.add('sel');
+    e.onclick=()=>{if(!can)return;if(c.sp==='heal'||c.sp==='swarm'){selCard=null;playCard(me,hi,0);return;}selCard=selCard===hi?null:hi;render();
+      $('#msg').textContent=c.sp==='dmgDice'?'공격할 적 유닛을 선택하세요.':c.sp==='buff'?'강화할 아군 유닛을 선택하세요.':'배치할 빈 전선을 선택하세요.';};
+    H.appendChild(e);});
+  $('#endB').disabled=busy||G.turn!==me||G.over;
+  if(!sc)$('#msg').textContent=G.over?'':G.turn===me?(busy?'전투 중…':'카드를 선택해 사용하거나 턴을 종료하세요.'):'AI 차례…';
+}
+async function act(t){if(selCard==null||busy)return;const hi=selCard;selCard=null;busy=true;await playCard(me,hi,t);busy=false;render();}
+$('#endB').onclick=()=>{if(!busy&&G.turn===me&&!G.over)endTurn();};
+$('#rulesB').onclick=()=>modal('규칙',`• 매 턴 최대 에너지 +1 (최대 8), 카드 1장 드로우.<br>• 유닛 카드: 내 쪽 빈 전선에 배치.<br>• 턴 종료 시 내 유닛이 왼쪽부터 맞은편을 공격. 맞은편이 비면 적 사령관에게 피해.<br>• 유닛은 반격하지 않습니다 — 맞은편을 막는 것이 핵심.<br>• 키워드: ${Object.entries(KWT).map(([k,v])=>`<span class="kw">${k}</span> ${v}`).join(' · ')}<br>• 덱이 떨어지면 드로우할 때마다 피로 피해가 1씩 커집니다.`);
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{$('#start').classList.add('hidden');start(+b.dataset.f);});
+window.__dbg={get G(){return G}};
+</script>
+</body>
+</html>
